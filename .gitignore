@@ -1,0 +1,48 @@
+# Lingkungan Virtual & Dependensi
+/venv/
+/env/
+/.venv/
+/pip-wheel-metadata/
+*.egg-info/
+/dist/
+/build/
+
+# File Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# File Spesifik Django
+*.log
+local_settings.py
+/db.sqlite3
+/db.sqlite3-journal
+
+# File Media & Statis (yang di-generate)
+/media/
+/staticfiles/
+
+# File Editor & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# File Testing & Laporan
+.coverage
+.coverage.*
+/htmlcov/
+nosetests.xml
+coverage.xml
+pytest.ini
+.pytest_cache/
+
+# File Rahasia & Konfigurasi
+.env
+.env.*
+!/.env.example
+
+# File Lain-lain
+.DS_Store
+Thumbs.db
