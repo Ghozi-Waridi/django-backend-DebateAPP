@@ -20,10 +20,7 @@ def get_groq_response(session_id: int, user_prompt: str):
         return "Error: Konfigurasi API Key Groq tidak ditemukan."
 
     try:
-
         chat_history_from_db = ChatMessage.objects.filter(session_id=session_id).order_by('created_at')
-
-
         messages_for_groq = [
             {"role": "system", "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang baik."}
         ]
