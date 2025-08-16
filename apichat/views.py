@@ -7,6 +7,32 @@ from .service import get_groq_response
 from .models import DebateSession, ChatMessage, TopicDebate
 
 class TopicDebateListAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        topic = request.data.get("topic")
+        
+        if not topic:
+            return Response(
+                {"error": "Topic is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if TopicDebate.objects.filter(topic=topic).exists():
+            return Response(
+                {"error": "Topic already exists"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        new_topic = TopicDebate.objects.create(topic=topic)
+        
+        return Response(
+            {
+                "id": new_topic.id,
+                "topic": new_topic.topic,
+                "message": "Topic created successfully"
+            },
+            status=status.HTTP_201_CREATED
+        )
+            
     def get(self, request, *args, **kwargs):
         topics = TopicDebate.objects.all()
         data = [
