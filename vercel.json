@@ -12,7 +12,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "debat/wsgi.py"
+      "dest": "debat_LLM/wsgi.py"
     }
   ]
 }
