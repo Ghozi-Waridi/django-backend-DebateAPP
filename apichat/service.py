@@ -3,26 +3,32 @@
 from groq import Groq
 from django.conf import settings
 import logging
-from .models import ChatMessage, DebateSession # <-- Import yang benar
+from .models import ChatMessage, DebateSession  # <-- Import yang benar
 
 logger = logging.getLogger(__name__)
+
 
 def get_groq_response(session_id: int, user_prompt: str):
     """
     Mengirim prompt ke Groq API dengan menyertakan history dari database
     dan mengembalikan respons teks dari LLM.
     """
-    
+
     api_key = settings.GROQ_API_KEY
-    
+
     if not api_key:
         logger.error("GROQ_API_KEY tidak ditemukan.")
         return "Error: Konfigurasi API Key Groq tidak ditemukan."
 
     try:
-        chat_history_from_db = ChatMessage.objects.filter(session_id=session_id).order_by('created_at')
+        chat_history_from_db = ChatMessage.objects.filter(
+            session_id=session_id
+        ).order_by("created_at")
         messages_for_groq = [
-            {"role": "system", "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang singkat dan baik. Berikan respons dalam 100 kata."}
+            {
+                "role": "system",
+                "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang singkat dan baik. Berikan respons dalam 100 kata.",
+            }
         ]
 
         for message in chat_history_from_db:
@@ -32,19 +38,17 @@ def get_groq_response(session_id: int, user_prompt: str):
 
         client = Groq(api_key=api_key)
         chat_completion = client.chat.completions.create(
-            messages=messages_for_groq, 
-            model="llama3-8b-8192",
+            messages=messages_for_groq,
+            model="deepseek-r1-distill-llama-70b",
             temperature=0.2,
             # max_tokens=200,
         )
-        
+
         response_text = chat_completion.choices[0].message.content
 
         if response_text:
             ChatMessage.objects.create(
-                session_id=session_id,
-                role='assistant',
-                content=response_text
+                session_id=session_id, role="assistant", content=response_text
             )
 
         return response_text
