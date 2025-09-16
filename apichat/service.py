@@ -22,7 +22,7 @@ def get_groq_response(session_id: int, user_prompt: str):
     try:
         chat_history_from_db = ChatMessage.objects.filter(session_id=session_id).order_by('created_at')
         messages_for_groq = [
-            {"role": "system", "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang baik."}
+            {"role": "system", "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang singkat dan baik. Berikan respons dalam 100 kata."}
         ]
 
         for message in chat_history_from_db:
@@ -34,6 +34,8 @@ def get_groq_response(session_id: int, user_prompt: str):
         chat_completion = client.chat.completions.create(
             messages=messages_for_groq, 
             model="llama3-8b-8192",
+            temperature=0.2,
+            # max_tokens=200,
         )
         
         response_text = chat_completion.choices[0].message.content
