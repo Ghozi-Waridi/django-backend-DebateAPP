@@ -4,23 +4,24 @@
 from django.db import models
 
 
-class TopicDebate(models.Model):
-    topic = models.CharField(max_length=255)
+# class TopicDebate(models.Model):
+#     topic = models.CharField(max_length=255)
+#
+#     def __str__(self):
+#         return self.topic
 
-    def __str__(self):
-        return self.topic
 
 
 class DebateSession(models.Model):
-    topic = models.ForeignKey(TopicDebate, related_name='sessions', on_delete=models.CASCADE)
+    topic = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class ChatMessage(models.Model):
 
-    session = models.ForeignKey(DebateSession, related_name='messages', on_delete=models.CASCADE)
-    role = models.CharField(max_length=10)  
+    session = models.ForeignKey(
+        DebateSession, related_name="messages", on_delete=models.CASCADE
+    )
+    role = models.CharField(max_length=10)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-
