@@ -40,7 +40,7 @@ def get_groq_response(session_id: int, user_prompt: str):
         chat_completion = client.chat.completions.create(
             messages=messages_for_groq,
             model="gemma2-9b-it",
-            # temperature=0.2,
+            temperature=0.2,
             # max_tokens=200,
         )
 
