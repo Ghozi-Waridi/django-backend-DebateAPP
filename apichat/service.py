@@ -39,7 +39,7 @@ def get_groq_response(session_id: int, user_prompt: str):
         client = Groq(api_key=api_key)
         chat_completion = client.chat.completions.create(
             messages=messages_for_groq,
-            model="deepseek-r1-distill-llama-70b",
+            model="meta-llama/llama-guard-4-12b",
             temperature=0.2,
             # max_tokens=200,
         )
