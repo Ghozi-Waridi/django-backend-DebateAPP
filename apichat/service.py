@@ -40,7 +40,7 @@ def get_groq_response(session_id: int, user_prompt: str):
         chat_completion = client.chat.completions.create(
             messages=messages_for_groq,
             model="meta-llama/llama-guard-4-12b",
-            temperature=0.2,
+            # temperature=0.2,
             # max_tokens=200,
         )
 
