@@ -4,12 +4,11 @@
 from django.db import models
 
 
-# class TopicDebate(models.Model):
-#     topic = models.CharField(max_length=255)
-#
-#     def __str__(self):
-#         return self.topic
+class TopicDebate(models.Model):
+    topic = models.CharField(max_length=255)
 
+    def __str__(self):
+        return self.topic
 
 
 class DebateSession(models.Model):
