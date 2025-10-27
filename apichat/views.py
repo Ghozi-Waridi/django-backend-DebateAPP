@@ -1,5 +1,7 @@
 # api_chat/views.py
 
+from email import message
+from hmac import trans_36
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -54,6 +56,11 @@ class GroqChatAPIView(APIView):
         if session_id:
             try:
                 session = DebateSession.objects.get(id=session_id)
+                ChatMessage.objects.create(
+                    session=session,
+                    role="user",
+                    content=user_prompt
+                )
             except DebateSession.DoesNotExist:
                 return Response(
                     {"error": "Sesi debat tidak ditemukan."},
@@ -61,13 +68,55 @@ class GroqChatAPIView(APIView):
                 )
         else:
             session = DebateSession.objects.create(topic=topic)
-            user_prompt = f"Topik: {topic}. Anda adalah Pihak {pihak}"
+            user_prompt = f"""
+        Topik: {topic}
+        Posisi: {pihak}
+
+        **Tugas**: Siapkan argumentasi yang kuat dan persuasif dari sudut pandang {pihak} dengan struktur:
+
+        1. **Pernyataan Pembuka** - maks 100 kata
+        2. **3 Argumentasi Utama** dengan data pendukung  
+        3. **Antisipasi Kontra-Argument** dari pihak lawan
+        4. **Pernyataan Penutup** yang impactful
+
+        **Requirements**:
+        - Bahasa formal dan profesional
+        - Fakta-based dan logis
+        - Tone: persuasive dan confident
+        - Sertakan contoh konkret jika memungkinkan
+        """
 
         print(session)
         ChatMessage.objects.create(session=session, role="user", content=user_prompt)
         print("User prompt: ", user_prompt, "sessionID : ", session)
         ai_response_text = get_groq_response(session.id, user_prompt)
         return Response(
-            {"response": ai_response_text, "session_id": session.id},
+            {"response": ai_response_text, "session_id": str(session.id), "topic": topic},
             status=status.HTTP_200_OK,
         )
+
+
+class SessionHistoryAPIView(APIView):
+    def get(self, request, session_id):
+        try:
+            session = DebateSession.objects.get(id=session_id)
+            message = ChatMessage.objects.filter(session=session).order_by("created_at")
+            
+            history = []
+            for msg in message:
+                history.append({
+                    "role":msg.role,
+                    "content":msg.content,
+                    "timestamp":msg.created_at
+                })
+            
+            return Response({
+                "session_id": session.id,
+                "topic":session.topic,
+                "history":history
+            })
+        except DebateSession.DoesNotExist:
+            return Response({
+                "error":"session tidak ditemukan"
+                
+            }, status=status.HTTP_404_NOT_FOUND)
