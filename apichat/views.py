@@ -102,19 +102,16 @@ class SessionHistoryAPIView(APIView):
             session = DebateSession.objects.get(id=session_id)
             message = ChatMessage.objects.filter(session=session).order_by("created_at")
             
-            history = []
+            by_session = {s.id: {"session_id": s.id, "topic":s.topic, "history":[]} for s in session}
             for msg in message:
-                history.append({
+                by_session[msg.session_id]["history"].append({
                     "role":msg.role,
                     "content":msg.content,
                     "timestamp":msg.created_at
                 })
-            
             return Response({
-                "session_id": session.id,
-                "topic":session.topic,
-                "history":history
-            })
+                "sessions":list(by_session.values())
+            }, status=status.HTTP_200_ok)
         except DebateSession.DoesNotExist:
             return Response({
                 "error":"session tidak ditemukan"
@@ -124,7 +121,7 @@ class SessionHistoryAPIView(APIView):
     def get(self, request):
         try:
             sessions = DebateSession.objects.all().order_by("created_at")
-            messages = ChatMessage.objects.filter(session__in=sessions.id).order_by("created_at")
+            messages = ChatMessage.objects.filter(session_id=sessions.id).order_by("created_at")
             history = []
             for msg in messages:
                 history.append({
