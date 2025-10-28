@@ -102,16 +102,19 @@ class SessionHistoryAPIView(APIView):
             session = DebateSession.objects.get(id=session_id)
             message = ChatMessage.objects.filter(session=session).order_by("created_at")
             
-            by_session = {s.id: {"session_id": s.id, "topic":s.topic, "history":[]} for s in session}
+            history = []
             for msg in message:
-                by_session[msg.session_id]["history"].append({
+                history.append({
                     "role":msg.role,
                     "content":msg.content,
                     "timestamp":msg.created_at
                 })
+            
             return Response({
-                "sessions":list(by_session.values())
-            }, status=status.HTTP_200_ok)
+                "session_id": session.id,
+                "topic":session.topic,
+                "history":history
+            })
         except DebateSession.DoesNotExist:
             return Response({
                 "error":"session tidak ditemukan"
@@ -121,19 +124,22 @@ class SessionHistoryAPIView(APIView):
     def get(self, request):
         try:
             sessions = DebateSession.objects.all().order_by("created_at")
-            messages = ChatMessage.objects.filter(session_id=sessions.id).order_by("created_at")
-            history = []
-            for msg in messages:
-                history.append({
-                    "role":msg.role,
-                    "content":msg.content,
-                    "timestamp":msg.created_at
-                })
-            return Response({
-                "sessions":sessions.id,
-                "topics":sessions.topic,
-                "history":history
-            })
+            messages = ChatMessage.objects.filter(session_id=sessions).order_by("created_at")
+
+            by_session = {s.id: {"session_id": s.id, "topic": s.topic, "history": []} for s in sessions}
+            for m in messages:
+                by_session[m.session_id]["history"].append(
+                    {
+                        "role": m.role,
+                        "content": m.content,
+                        "timestamp": m.created_at.isoformat(),
+                    }
+                )
+
+            return Response(
+                {"sessions": list(by_session.values())},
+                status=status.HTTP_200_OK,
+            )
             
         except DebateSession.DoesNotExist:
             return Response({
