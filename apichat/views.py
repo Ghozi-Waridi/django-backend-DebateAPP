@@ -97,52 +97,71 @@ class GroqChatAPIView(APIView):
 
 
 class SessionHistoryAPIView(APIView):
-    def post(self, request, session_id):
-        try:
-            session = DebateSession.objects.get(id=session_id)
-            message = ChatMessage.objects.filter(session=session).order_by("created_at")
-            
-            history = []
-            for msg in message:
-                history.append({
-                    "role":msg.role,
-                    "content":msg.content,
-                    "timestamp":msg.created_at
-                })
-            
-            return Response({
-                "session_id": session.id,
-                "topic":session.topic,
-                "history":history
-            })
-        except DebateSession.DoesNotExist:
-            return Response({
-                "error":"session tidak ditemukan"
-                
-            }, status=status.HTTP_404_NOT_FOUND)
-            
-    def get(self, request):
-        try:
-            sessions = DebateSession.objects.all().order_by("created_at")
-            messages = ChatMessage.objects.filter(session_id=sessions).order_by("created_at")
+    def get(self, request, session_id=None, *args, **kwargs):
+        # Jika session_id diberikan: kembalikan riwayat untuk satu sesi tersebut
+        if session_id is not None:
+            try:
+                session = DebateSession.objects.get(id=session_id)
+            except DebateSession.DoesNotExist:
+                return Response({"error": "session tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
 
-            by_session = {s.id: {"session_id": s.id, "topic": s.topic, "history": []} for s in sessions}
-            for m in messages:
-                by_session[m.session_id]["history"].append(
-                    {
-                        "role": m.role,
-                        "content": m.content,
-                        "timestamp": m.created_at.isoformat(),
-                    }
-                )
-
+            messages = ChatMessage.objects.filter(session=session).order_by("created_at")
+            history = [
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.created_at.isoformat(),
+                }
+                for m in messages
+            ]
             return Response(
-                {"sessions": list(by_session.values())},
+                {
+                    "session_id": session.id,
+                    "topic": session.topic,
+                    "history": history,
+                },
                 status=status.HTTP_200_OK,
             )
-            
+
+        # Tanpa session_id: kembalikan semua sesi dengan history masing-masing
+        sessions = DebateSession.objects.all().order_by("created_at")
+        messages = ChatMessage.objects.filter(session__in=sessions).order_by("created_at")
+
+        by_session = {s.id: {"session_id": s.id, "topic": s.topic, "history": []} for s in sessions}
+        for m in messages:
+            by_session[m.session_id]["history"].append(
+                {
+                    "role": m.role,
+                    "content": m.content,
+                    "timestamp": m.created_at.isoformat(),
+                }
+            )
+
+        return Response({"sessions": list(by_session.values())}, status=status.HTTP_200_OK)
+
+    # Opsional: tetap sediakan POST untuk ambil history per session jika diinginkan
+    def post(self, request, session_id=None, *args, **kwargs):
+        if session_id is None:
+            return Response({"error": "session_id diperlukan di URL"}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            session = DebateSession.objects.get(id=session_id)
         except DebateSession.DoesNotExist:
-            return Response({
-                "error":"session tidak ditemukan"
-            }, status=status.HTTP_404_NOT_FOUND)
-        
+            return Response({"error": "session tidak ditemukan"}, status=status.HTTP_404_NOT_FOUND)
+
+        messages = ChatMessage.objects.filter(session=session).order_by("created_at")
+        history = [
+            {
+                "role": m.role,
+                "content": m.content,
+                "timestamp": m.created_at.isoformat(),
+            }
+            for m in messages
+        ]
+        return Response(
+            {
+                "session_id": session.id,
+                "topic": session.topic,
+                "history": history,
+            },
+            status=status.HTTP_200_OK,
+        )
