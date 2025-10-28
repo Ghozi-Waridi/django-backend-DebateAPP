@@ -97,7 +97,7 @@ class GroqChatAPIView(APIView):
 
 
 class SessionHistoryAPIView(APIView):
-    def get(self, request, session_id):
+    def post(self, request, session_id):
         try:
             session = DebateSession.objects.get(id=session_id)
             message = ChatMessage.objects.filter(session=session).order_by("created_at")
@@ -120,3 +120,26 @@ class SessionHistoryAPIView(APIView):
                 "error":"session tidak ditemukan"
                 
             }, status=status.HTTP_404_NOT_FOUND)
+            
+    def get(self, request):
+        try:
+            sessions = DebateSession.objects.all().order_by("created_at")
+            messages = ChatMessage.objects.filter(session__in=sessions.id).order_by("created_at")
+            history = []
+            for msg in messages:
+                history.append({
+                    "role":msg.role,
+                    "content":msg.content,
+                    "timestamp":msg.created_at
+                })
+            return Response({
+                "sessions":sessions.id,
+                "topics":sessions.topic,
+                "history":history
+            })
+            
+        except DebateSession.DoesNotExist:
+            return Response({
+                "error":"session tidak ditemukan"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
