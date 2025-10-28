@@ -27,7 +27,11 @@ def get_groq_response(session_id: int, user_prompt: str):
         messages_for_groq = [
             {
                 "role": "system",
-                "content": "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang singkat dan baik. Berikan respons dalam 100 kata.",
+                "content": (
+                    "Anda adalah lawan debat yang cerdas, kritis, dan menggunakan bahasa Indonesia yang singkat dan baik. "
+                    "Berikan jawaban ringkas (<=100 kata). "
+                    "Format jawaban harus plain text: jangan gunakan markdown, jangan gunakan tanda bintang (*), tidak ada heading/bullet."
+                ),
             }
         ]
 
