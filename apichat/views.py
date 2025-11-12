@@ -49,13 +49,17 @@ class GroqChatAPIView(APIView):
     def post(self, request, *args, **kwargs):
         print("Coba : ", request.data)
         user_prompt = request.data.get("prompt")
-        session_id = request.data.get("sessionId")
+        session_id = request.data.get("sessionId") or request.data.get("session_id")
         topic = request.data.get("topic")
         pihak = request.data.get("pihak")
 
         if session_id:
             try:
                 session = DebateSession.objects.get(id=session_id)
+                # Pastikan topic tersedia
+                if not topic:
+                    topic = session.topic
+                
                 ChatMessage.objects.create(
                     session=session,
                     role="user",
@@ -67,6 +71,13 @@ class GroqChatAPIView(APIView):
                     status=status.HTTP_404_NOT_FOUND,
                 )
         else:
+            # Validasi topic saat membuat sesi baru
+            if not topic:
+                return Response(
+                    {"error": "Topic diperlukan untuk sesi baru."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
             session = DebateSession.objects.create(topic=topic)
             user_prompt = f"""
         Topik: {topic}
@@ -85,13 +96,17 @@ class GroqChatAPIView(APIView):
         - Tone: persuasive dan confident
         - Sertakan contoh konkret jika memungkinkan
         """
+            ChatMessage.objects.create(session=session, role="user", content=user_prompt)
 
-        print(session)
-        ChatMessage.objects.create(session=session, role="user", content=user_prompt)
-        print("User prompt: ", user_prompt, "sessionID : ", session)
+        print(f"Session ID: {session.id}, Topic: {session.topic}")
         ai_response_text = get_groq_response(session.id, user_prompt)
+        
         return Response(
-            {"response": ai_response_text, "session_id": str(session.id), "topic": topic},
+            {
+                "response": ai_response_text, 
+                "session_id": str(session.id), 
+                "topic": session.topic or topic
+            },
             status=status.HTTP_200_OK,
         )
 
