@@ -199,5 +199,5 @@ class SessionHistoryAPIView(APIView):
         except DebateSession.DoesNotExist:
             return Response(
                 {"error": "Session tidak ditemukan"},
-                status=status.HTTP_404_NOT_FOUND~
+                status=status.HTTP_404_NOT_FOUND
             )
