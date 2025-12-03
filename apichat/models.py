@@ -19,7 +19,8 @@ class DebateSession(models.Model):
     update_at = models.DateTimeField(auto_now=True)
     
     def __str__(self) -> str:
-        return f"Session {self.id} - {self.topic[:50]}"
+        topic_text = self.topic[:50] if self.topic else "No Topic"
+        return f"Session {self.id} - {topic_text}"
 
 
 class ChatMessage(models.Model):

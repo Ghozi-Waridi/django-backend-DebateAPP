@@ -180,3 +180,24 @@ class SessionHistoryAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+    def delete(self, request, session_id=None, *args, **kwargs):
+        """Menghapus session berdasarkan ID"""
+        if session_id is None:
+            return Response(
+                {"error": "session_id diperlukan di URL"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            session = DebateSession.objects.get(id=session_id)
+            session.delete()  # Akan otomatis menghapus ChatMessage terkait karena on_delete=CASCADE
+            return Response(
+                {"message": "Session berhasil dihapus"},
+                status=status.HTTP_200_OK
+            )
+        except DebateSession.DoesNotExist:
+            return Response(
+                {"error": "Session tidak ditemukan"},
+                status=status.HTTP_404_NOT_FOUND~
+            )
